@@ -9,6 +9,8 @@ namespace vega.Models.Mappers
         public DomainToViewModelMappingProfile()
         {
             CreateMap<Feature, FeatureViewModel>();
+            CreateMap<Make, MakeViewModel>();
+            CreateMap<Model, ModelViewModel>();
         }
     }
 }

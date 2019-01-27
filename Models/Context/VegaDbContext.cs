@@ -16,5 +16,7 @@ namespace vega.Models.Context
         }
 
         public DbSet<Feature> Features { get; set; }
+        public DbSet<Model> Models { get; set; }
+        public DbSet<Make> Makes { get; set; }
     }
 }

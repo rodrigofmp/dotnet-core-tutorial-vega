@@ -10,8 +10,8 @@ namespace vega.Controllers
 {
     public class FeaturesController : Controller
     {
-        private VegaDbContext _context;
-        private IMapper _mapper;
+        private readonly VegaDbContext _context;
+        private readonly IMapper _mapper;
 
         public FeaturesController(VegaDbContext context, IMapper mapper)
         {

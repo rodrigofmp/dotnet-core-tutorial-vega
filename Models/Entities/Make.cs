@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace vega.Models.Entities
@@ -10,6 +11,11 @@ namespace vega.Models.Entities
         [StringLength(255)]             
         public string Name { get; set; }
 
-        public List<Model> Models { get; set; }
+        public ICollection<Model> Models { get; set; }
+
+        public Make()
+        {
+            Models = new Collection<Model>();
+        }
     }
 }

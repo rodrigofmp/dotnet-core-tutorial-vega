@@ -30,7 +30,7 @@ import { VehicleFormComponent } from './components/vehicle-form/vehicle-form.com
             { path: 'home', component: HomeComponent },
             { path: 'counter', component: CounterComponent },
             { path: 'fetch-data', component: FetchDataComponent },
-            { path: 'vehicle-form', component: VehicleFormComponent },
+            { path: 'vehicles/new', component: VehicleFormComponent },
             { path: '**', redirectTo: 'home' }
         ])
     ],

@@ -11,6 +11,7 @@ namespace vega.Models.Mappers
             CreateMap<Feature, FeatureViewModel>();
             CreateMap<Make, MakeViewModel>();
             CreateMap<Model, ModelViewModel>();
+            CreateMap<Vehicle, VehicleViewModel>();
         }
     }
 }

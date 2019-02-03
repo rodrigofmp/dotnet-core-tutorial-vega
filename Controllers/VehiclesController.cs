@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace vega.Controllers
 {
@@ -40,6 +41,12 @@ namespace vega.Controllers
         [HttpPost("api/vehicles/create")]
         public IActionResult Create([FromBody] VehicleViewModel form)
         {
+            if (!ModelState.IsValid)
+            {
+                IEnumerable<ModelError> allErrors = ModelState.Values.SelectMany(v => v.Errors);
+                return BadRequest(Json(allErrors));
+            }
+
             var model = _mapper.Map<VehicleViewModel, Vehicle>(form);
             model.LastUpdate = DateTime.Now;
 
@@ -52,6 +59,12 @@ namespace vega.Controllers
         [HttpPost("api/vehicles/update")]
         public IActionResult Update([FromBody] VehicleViewModel form)
         {
+            if (!ModelState.IsValid)
+            {
+                IEnumerable<ModelError> allErrors = ModelState.Values.SelectMany(v => v.Errors);
+                return BadRequest(Json(allErrors));
+            }
+
             var model = _context.Vehicles.Where(v => v.Id == form.Id).SingleOrDefault();
             if (model != null)
             {

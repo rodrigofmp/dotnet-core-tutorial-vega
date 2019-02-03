@@ -51,6 +51,16 @@ namespace vega.Controllers
             model.LastUpdate = DateTime.Now;
 
             _context.Vehicles.Add(model);
+            
+            foreach (var featureId in form.Features)
+            {
+                _context.VehiclesFeatures.Add(new VehicleFeature()
+                {
+                    VehicleId = model.Id,
+                    FeatureId = featureId
+                });
+            }
+
             _context.SaveChanges();
 
             return Ok();
@@ -68,9 +78,26 @@ namespace vega.Controllers
             var model = _context.Vehicles.Where(v => v.Id == form.Id).SingleOrDefault();
             if (model != null)
             {
+                var vehiclesFeaturesModel = _context.VehiclesFeatures.Where(v => v.VehicleId == form.Id).ToList();
+
                 _mapper.Map<VehicleViewModel, Vehicle>(form, model);
                 model.LastUpdate = DateTime.Now;
                 _context.Vehicles.Update(model);
+
+                foreach (var vf in vehiclesFeaturesModel)
+                {
+                    _context.VehiclesFeatures.Remove(vf);
+                }
+
+                foreach (var featureId in form.Features)
+                {
+                    _context.VehiclesFeatures.Add(new VehicleFeature()
+                    {
+                        VehicleId = model.Id,
+                        FeatureId = featureId
+                    });
+                }
+
                 _context.SaveChanges();
                 return Ok();
             }
@@ -85,6 +112,13 @@ namespace vega.Controllers
             var model = _context.Vehicles.Where(v => v.Id == form.Id).SingleOrDefault();
             if (model != null)
             {
+                var vehiclesFeaturesModel = _context.VehiclesFeatures.Where(v => v.VehicleId == form.Id).ToList();
+
+                foreach (var vf in vehiclesFeaturesModel)
+                {
+                    _context.VehiclesFeatures.Remove(vf);
+                }
+
                 _context.Vehicles.Remove(model);
                 _context.SaveChanges();
                 return Ok();

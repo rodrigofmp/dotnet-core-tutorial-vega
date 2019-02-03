@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using vega.Models.Entities;
 
@@ -24,5 +25,7 @@ namespace vega.Models.ViewModels
         [Required(ErrorMessage="E-mail do contato é obrigatório.", AllowEmptyStrings=false)]
         [RegularExpression(".+\\@.+\\..+",ErrorMessage = "E-mail é inválido.")]
         public string ContactEmail { get; set; }
+
+        public List<int> Features { get; set; }
     }
 }

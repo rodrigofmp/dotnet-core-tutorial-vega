@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace vega.Controllers
 {
+    [Route("api/vehicles")]
     public class VehiclesController : Controller
     {
         private readonly VegaDbContext _context;
@@ -23,109 +24,69 @@ namespace vega.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("api/vehicles")]
-        public IEnumerable<VehicleViewModel> GetVehicles()
-        {
-            var result = new List<VehicleViewModel>();
-
-            var vehicles = _context.Vehicles.Include(m => m.Model);
-            foreach (var vehicle in vehicles)
-            {
-                var vehicleView = _mapper.Map<Vehicle, VehicleViewModel>(vehicle);
-                result.Add(vehicleView);
-            }
-
-            return result;
-        }
-
-        [HttpPost("api/vehicles/create")]
-        public IActionResult Create([FromBody] VehicleViewModel form)
+        [HttpPost]
+        public async Task<IActionResult> CreateVehicle([FromBody] VehicleViewModel form)
         {
             if (!ModelState.IsValid)
-            {
-                IEnumerable<ModelError> allErrors = ModelState.Values.SelectMany(v => v.Errors);
-                return BadRequest(Json(allErrors));
-            }
+                return BadRequest(ModelState);
 
             var model = _mapper.Map<VehicleViewModel, Vehicle>(form);
             model.LastUpdate = DateTime.Now;
 
             _context.Vehicles.Add(model);
-            
-            foreach (var featureId in form.Features)
-            {
-                _context.VehiclesFeatures.Add(new VehicleFeature()
-                {
-                    VehicleId = model.Id,
-                    FeatureId = featureId
-                });
-            }
+            await _context.SaveChangesAsync();           
 
-            _context.SaveChanges();
+            var result = _mapper.Map<Vehicle, VehicleViewModel>(model);
 
-            return Ok();
+            return Ok(result);
         }
 
-        [HttpPost("api/vehicles/update")]
-        public IActionResult Update([FromBody] VehicleViewModel form)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateVehicle(int id, [FromBody] VehicleViewModel form)
         {
             if (!ModelState.IsValid)
-            {
-                IEnumerable<ModelError> allErrors = ModelState.Values.SelectMany(v => v.Errors);
-                return BadRequest(Json(allErrors));
-            }
+                return BadRequest(ModelState);
 
-            var model = _context.Vehicles.Where(v => v.Id == form.Id).SingleOrDefault();
-            if (model != null)
-            {
-                var vehiclesFeaturesModel = _context.VehiclesFeatures.Where(v => v.VehicleId == form.Id).ToList();
+            var vehicle = await _context.Vehicles.Include(v => v.Features).SingleOrDefaultAsync(v => v.Id == id);
 
-                _mapper.Map<VehicleViewModel, Vehicle>(form, model);
-                model.LastUpdate = DateTime.Now;
-                _context.Vehicles.Update(model);
-
-                foreach (var vf in vehiclesFeaturesModel)
-                {
-                    _context.VehiclesFeatures.Remove(vf);
-                }
-
-                foreach (var featureId in form.Features)
-                {
-                    _context.VehiclesFeatures.Add(new VehicleFeature()
-                    {
-                        VehicleId = model.Id,
-                        FeatureId = featureId
-                    });
-                }
-
-                _context.SaveChanges();
-                return Ok();
-            }
-            else {
+            if (vehicle == null)
                 return NotFound();
-            }
+
+            _mapper.Map<VehicleViewModel, Vehicle>(form, vehicle);
+            vehicle.LastUpdate = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            var result = _mapper.Map<Vehicle, VehicleViewModel>(vehicle);
+
+            return Ok(result);
         }
 
-        [HttpPost("api/vehicles/delete")]
-        public IActionResult Delete([FromBody] VehicleViewModel form)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteVehicle(int id)
         {
-            var model = _context.Vehicles.Where(v => v.Id == form.Id).SingleOrDefault();
-            if (model != null)
-            {
-                var vehiclesFeaturesModel = _context.VehiclesFeatures.Where(v => v.VehicleId == form.Id).ToList();
+            var vehicle = await _context.Vehicles.FindAsync(id);
 
-                foreach (var vf in vehiclesFeaturesModel)
-                {
-                    _context.VehiclesFeatures.Remove(vf);
-                }
-
-                _context.Vehicles.Remove(model);
-                _context.SaveChanges();
-                return Ok();
-            }
-            else {
+            if (vehicle == null)
                 return NotFound();
-            }
+
+            _context.Remove(vehicle);
+            await _context.SaveChangesAsync();
+
+            return Ok(id);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetVehicle(int id)
+        {
+            var vehicle = await _context.Vehicles.Include(v => v.Features).SingleOrDefaultAsync(v => v.Id == id);
+
+            if (vehicle == null)
+                return NotFound();
+
+            var vehicleResource = _mapper.Map<Vehicle, VehicleViewModel>(vehicle);
+
+            return Ok(vehicleResource);
         }
     }
 }

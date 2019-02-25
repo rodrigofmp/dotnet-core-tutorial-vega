@@ -9,7 +9,7 @@ namespace vega.Models.Mappers
     {
         public ViewModelToDomainMappingProfile()
         {
-            CreateMap<VehicleViewModel, Vehicle>()
+            CreateMap<SaveVehicleViewModel, Vehicle>()
               .ForMember(v => v.Id, opt => opt.Ignore())
               .ForMember(v => v.ContactName, opt => opt.MapFrom(vr => vr.Contact.Name))
               .ForMember(v => v.ContactEmail, opt => opt.MapFrom(vr => vr.Contact.Email))

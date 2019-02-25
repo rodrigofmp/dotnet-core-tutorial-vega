@@ -25,24 +25,24 @@ namespace vega.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateVehicle([FromBody] VehicleViewModel form)
+        public async Task<IActionResult> CreateVehicle([FromBody] SaveVehicleViewModel form)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var model = _mapper.Map<VehicleViewModel, Vehicle>(form);
+            var model = _mapper.Map<SaveVehicleViewModel, Vehicle>(form);
             model.LastUpdate = DateTime.Now;
 
             _context.Vehicles.Add(model);
             await _context.SaveChangesAsync();           
 
-            var result = _mapper.Map<Vehicle, VehicleViewModel>(model);
+            var result = _mapper.Map<Vehicle, SaveVehicleViewModel>(model);
 
             return Ok(result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateVehicle(int id, [FromBody] VehicleViewModel form)
+        public async Task<IActionResult> UpdateVehicle(int id, [FromBody] SaveVehicleViewModel form)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -52,12 +52,12 @@ namespace vega.Controllers
             if (vehicle == null)
                 return NotFound();
 
-            _mapper.Map<VehicleViewModel, Vehicle>(form, vehicle);
+            _mapper.Map<SaveVehicleViewModel, Vehicle>(form, vehicle);
             vehicle.LastUpdate = DateTime.Now;
 
             await _context.SaveChangesAsync();
 
-            var result = _mapper.Map<Vehicle, VehicleViewModel>(vehicle);
+            var result = _mapper.Map<Vehicle, SaveVehicleViewModel>(vehicle);
 
             return Ok(result);
         }
@@ -79,7 +79,12 @@ namespace vega.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetVehicle(int id)
         {
-            var vehicle = await _context.Vehicles.Include(v => v.Features).SingleOrDefaultAsync(v => v.Id == id);
+            var vehicle = await _context.Vehicles
+                .Include(v => v.Features)
+                    .ThenInclude(vf => vf.Feature)
+                .Include(v => v.Model)
+                    .ThenInclude(vm => vm.Make)
+                .SingleOrDefaultAsync(v => v.Id == id);
 
             if (vehicle == null)
                 return NotFound();

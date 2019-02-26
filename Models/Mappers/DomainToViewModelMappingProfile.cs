@@ -11,6 +11,7 @@ namespace vega.Models.Mappers
         {
             CreateMap<Feature, FeatureViewModel>();
             CreateMap<Make, MakeViewModel>();
+            CreateMap<Make, MakeVehicleViewModel>();
             CreateMap<Model, ModelViewModel>();
             CreateMap<Vehicle, SaveVehicleViewModel>()
                 .ForMember(vvm => vvm.Contact, opt => opt.MapFrom(v => new ContactViewModel { Name = v.ContactName, Email = v.ContactEmail, Phone = v.ContactPhone }))

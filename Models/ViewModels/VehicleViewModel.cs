@@ -10,7 +10,7 @@ namespace vega.Models.ViewModels
         
         public ModelViewModel Model { get; set; }
         
-        public MakeViewModel Make { get; set; }
+        public MakeVehicleViewModel Make { get; set; }
 
         public string IsRegistered { get; set; } 
 

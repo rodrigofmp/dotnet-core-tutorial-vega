@@ -3,28 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using vega.Models.Entities;
-using vega.Models.Context;
 using vega.Models.ViewModels;
+using vega.Core.Repository;
+using System.Threading.Tasks;
 
 namespace vega.Controllers
 {
     public class FeaturesController : Controller
     {
-        private readonly VegaDbContext _context;
+        private readonly IFeatureRepository _repository;
         private readonly IMapper _mapper;
 
-        public FeaturesController(VegaDbContext context, IMapper mapper)
+        public FeaturesController(IMapper mapper, IFeatureRepository repository)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
         }
 
         [HttpGet("api/features")]
-        public IEnumerable<FeatureViewModel> GetFeatures()
+        public async Task<IEnumerable<FeatureViewModel>> GetFeaturesAsync()
         {
             var result = new List<FeatureViewModel>();
 
-            var features = _context.Features.ToList();
+            var features = await _repository.GetAllFeaturesAsync();
             foreach (var feature in features)
             {
                 var featureView = _mapper.Map<Feature, FeatureViewModel>(feature);

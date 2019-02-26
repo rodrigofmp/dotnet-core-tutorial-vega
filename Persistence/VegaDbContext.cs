@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using vega.Models.Entities;
 
-namespace vega.Models.Context
+namespace vega.Persistence
 {
     public class VegaDbContext : DbContext
     {

@@ -3,29 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using vega.Models.Entities;
-using vega.Models.Context;
 using vega.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using vega.Core.Repository;
+using System.Threading.Tasks;
 
 namespace vega.Controllers
 {
     public class MakesController : Controller
     {
-        private readonly VegaDbContext _context;
+        private readonly IMakeRepository _repository;
         private readonly IMapper _mapper;        
 
-        public MakesController(VegaDbContext context, IMapper mapper)
+        public MakesController(IMapper mapper, IMakeRepository repository)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
         }
 
         [HttpGet("api/makes")]
-        public IEnumerable<MakeViewModel> GetMakes()
+        public async Task<IEnumerable<MakeViewModel>> GetMakesAsync()
         {
             var result = new List<MakeViewModel>();
 
-            var makes = _context.Makes.Include(m => m.Models);
+            var makes = await _repository.GetAllMakesWithModelsAsync();
             foreach (var make in makes)
             {
                 var makeView = _mapper.Map<Make, MakeViewModel>(make);

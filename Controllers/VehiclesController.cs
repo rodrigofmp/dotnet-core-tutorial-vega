@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using vega.Models.Context;
 using vega.Models.Entities;
 using vega.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -9,19 +8,22 @@ using System;
 using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using vega.Core.Repository;
 
 namespace vega.Controllers
 {
     [Route("api/vehicles")]
     public class VehiclesController : Controller
     {
-        private readonly VegaDbContext _context;
+        private readonly IVehicleRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public VehiclesController(VegaDbContext context, IMapper mapper)
+        public VehiclesController(IMapper mapper, IVehicleRepository repository, IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpPost]
@@ -33,15 +35,10 @@ namespace vega.Controllers
             var model = _mapper.Map<SaveVehicleViewModel, Vehicle>(form);
             model.LastUpdate = DateTime.Now;
 
-            _context.Vehicles.Add(model);
-            await _context.SaveChangesAsync();           
+            _repository.Add(model);
+            await _unitOfWork.CompleteAsync();           
 
-            var vehicle = await _context.Vehicles
-                .Include(v => v.Features)
-                    .ThenInclude(vf => vf.Feature)
-                .Include(v => v.Model)
-                    .ThenInclude(vm => vm.Make)
-                .SingleOrDefaultAsync(v => v.Id == model.Id);
+            var vehicle = await _repository.GetVehicle(model.Id);
 
             var result = _mapper.Map<Vehicle, VehicleViewModel>(vehicle);
 
@@ -54,7 +51,7 @@ namespace vega.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var model = await _context.Vehicles.Include(v => v.Features).SingleOrDefaultAsync(v => v.Id == id);
+            var model = await _repository.GetVehicle(id);
 
             if (model == null)
                 return NotFound();
@@ -62,14 +59,9 @@ namespace vega.Controllers
             _mapper.Map<SaveVehicleViewModel, Vehicle>(form, model);
             model.LastUpdate = DateTime.Now;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.CompleteAsync();
 
-            var vehicle = await _context.Vehicles
-                .Include(v => v.Features)
-                    .ThenInclude(vf => vf.Feature)
-                .Include(v => v.Model)
-                    .ThenInclude(vm => vm.Make)
-                .SingleOrDefaultAsync(v => v.Id == model.Id);
+            var vehicle = await _repository.GetVehicle(model.Id);
 
             var result = _mapper.Map<Vehicle, VehicleViewModel>(vehicle);
 
@@ -79,13 +71,13 @@ namespace vega.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteVehicle(int id)
         {
-            var vehicle = await _context.Vehicles.FindAsync(id);
+            var vehicle = await _repository.GetVehicle(id, includeRelated: false);
 
             if (vehicle == null)
                 return NotFound();
 
-            _context.Remove(vehicle);
-            await _context.SaveChangesAsync();
+            _repository.Remove(vehicle);
+            await _unitOfWork.CompleteAsync();
 
             return Ok(id);
         }
@@ -93,12 +85,7 @@ namespace vega.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetVehicle(int id)
         {
-            var vehicle = await _context.Vehicles
-                .Include(v => v.Features)
-                    .ThenInclude(vf => vf.Feature)
-                .Include(v => v.Model)
-                    .ThenInclude(vm => vm.Make)
-                .SingleOrDefaultAsync(v => v.Id == id);
+            var vehicle = await _repository.GetVehicle(id);
 
             if (vehicle == null)
                 return NotFound();

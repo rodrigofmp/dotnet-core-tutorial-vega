@@ -1,3 +1,5 @@
+import * as _ from 'underscore';
+import { Vehicle, SaveVehicle } from './../../models/vehicle';
 import { VehicleService } from '../../services/vehicle.service';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,9 +15,17 @@ export class VehicleFormComponent implements OnInit {
   makes: any[];
   models: any[];
   features: any[];
-  vehicle: any = {
+  vehicle: SaveVehicle = {
+    id: 0,
+    makeId: 0,
+    modelId: 0,
+    isRegistered: false,    
     features: [],
-    contact: {}
+    contact: {
+      name: '',
+      phone: '',
+      email: ''
+    }
   };  
 
   constructor(
@@ -46,13 +56,22 @@ export class VehicleFormComponent implements OnInit {
       this.features = data[1];
 
       if (this.vehicle.id)
-        this.vehicle = data[2];
+        this.setVehicle(data[2]);
 
     }, err => {
       if (err.status == 404)
         this.router.navigate(['/home']);
     });
  
+  }
+
+  private setVehicle(v: Vehicle) {
+    this.vehicle.id = v.id;
+    this.vehicle.makeId = v.make.id;
+    this.vehicle.modelId = v.model.id;
+    this.vehicle.isRegistered = v.isRegistered;
+    this.vehicle.contact = v.contact;
+    this.vehicle.features = _.pluck(v.features, 'id');
   }
 
   onMakeChange() {
